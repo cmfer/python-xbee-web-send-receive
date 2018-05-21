@@ -1,10 +1,10 @@
 # README #
 
-Servidor HTTP que permite obtener y enviar mensajes a través del protocolo ZigBee.
+Servidor Web que permite obtener y enviar mensajes a través del protocolo ZigBee.
 
 ### Funcionalidades ###
 
-* Visualización de datos recibidos por nodo,
+* Visualización de datos recibidos por nodo.
 * Envío de datos a un nodo conectado.
 
 ### Instalación ###
