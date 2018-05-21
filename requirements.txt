@@ -1,0 +1,3 @@
+wheezy.web
+wheezy.template
+pyserial==3.3

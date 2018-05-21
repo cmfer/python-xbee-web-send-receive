@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+@require(path_for)
+<html lang="en" ng-app="coap_web">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta charset="utf-8">
+        <title>Curso IoT Samsung</title>
+        <meta name="generator" content="Bootply">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+        <meta name="description" content="Example of the Bootstrap dashboard teplate with a  collapsible offcanvas sidebar. The left sidebar collaspes on smaller screens and can be toggled.">
+        <link rel="icon" href="http://getbootstrap.com/favicon.ico">
+        <!-- jQuery -->
+        <script src="@path_for('static', path='bower_components/jquery/dist/jquery.min.js')" ></script>
+
+        <!-- Bootstrap Core JavaScript -->
+        <script src="@path_for('static', path='bower_components/bootstrap/dist/js/bootstrap.min.js')" ></script>
+        <!-- href="bower_components/bootstrap/dist/css/bootstrap.min.css" -->
+        <link  href="@path_for('static', path='bower_components/bootstrap/dist/css/bootstrap.min.css')"  rel="stylesheet">
+        <script src="@path_for('static', path='js/angular.js')"></script>
+        <script src="@path_for('static', path='js/angular-resource.js')"></script>
+        <script src="@path_for('static', path='js/angular-route.js')"></script>
+
+
+
+        <script src="@path_for('static', path='scripts/appConfig.js')"></script>
+        <script src="@path_for('static', path='scripts/nodesService.js')"></script>
+        <script src="@path_for('static', path='scripts/nodesController.js')"></script>
+
+
+        <!-- Custom styles for this template -->
+        <link href="@path_for('static', path='css/home.css')" rel="stylesheet" type="text/css">
+
+
+</head>
+
+   <body ng-controller="NodesController">
+
+        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#home">Curso IoT Samsung. Tecnologías de comunicaciones para la IoT</a>
+        </div>
+
+</nav>
+        <div class="col-sm-9 col-md-10 main">
+        <h3 class="sub-header">Nodos ZigBee conectados</h3>
+          <div class="table-responsive">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>Dirección</th>
+                  <th>Dirección Larga</th>
+				  <th>Operaciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                 <tr ng-repeat="node in nodes">
+                    <td>{[{node.addr}]}</td>
+                    <td>{[{node.addr_long}]}</td>
+                    <td>
+                     <button type="button" class="btn btn-info btn-circle" title="Ver mensajes del nodo" ng-click='view(node)'>
+                      <span class="glyphicon glyphicon-th-list" aria-hidden="true"></span>
+                    </button>&nbsp;&nbsp;
+
+                    <button type="button" class="btn btn-info btn-circle" title="Mandar mensaje al nodo" ng-click='showSendDataForm(node)'>
+                      <span class="glyphicon glyphicon-triangle-top" aria-hidden="true"></span>
+                    </button>&nbsp;&nbsp;
+                 </tr>
+              </tbody>
+            </table>
+          </div>
+          
+           <div class="modal fade" id="showDialogSend">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close"  data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Enviar datos al nodo {[{node.addr_long}]}</h4>
+      </div>
+        <form name="putForm">
+      <div class="modal-body">
+          <div class="form-group">
+              <label for="sensor">Datos a enviar:</label>
+            <input type="text" min="0" id="zigbeevalue" ng-model="value"> <br>
+          </div>
+      </div>
+      <div class="modal-footer">
+         <button type="button" class="btn btn-success btn-circle" ng-disabled="putForm.$invalid" ng-click="sendData()">Enviar</button>
+        <button type="button" class="btn btn-default"  data-dismiss="modal">Cerrar</button>
+      </div>
+             <br>
+        <div class="alert alert-success" role="alert" ng-show="request_correct" name="">Operación realizada correctamente</div>
+        <div class="alert alert-danger" role="alert" ng-show="request_bad">Error al realizar la operación</div>
+            </form>
+    </div><!-- /.modal-content -->
+
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+              <div class="modal fade" id="showDialogView" >
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <button type="button" class="close" ng-click="stopClient()" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">Datos del nodo {[{node.addr_long}]}</h4>
+                      </div>
+                      <div class="modal-body">
+                      <ul ng-repeat="d in data track by $index">
+                       <li><b>{[{d.time}]}</b> {[{' '+d.data}]}</li>
+                      </ul>
+                      </div>
+                      <div class="modal-footer">
+                          <button type="button" class="btn btn-default" ng-click="stopClient()" data-dismiss="modal">Cerrar</button>
+                      </div>
+                    </div><!-- /.modal-content -->
+                  </div><!-- /.modal-dialog -->
+                </div><!-- /.modal -->
+    </div>
+  <footer>
+</footer>
+
+
+</body></html>
