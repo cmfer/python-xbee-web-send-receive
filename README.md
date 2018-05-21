@@ -8,11 +8,12 @@ Servidor HTTP que permite obtener y enviar mensajes a través del protocolo ZigB
 * Envío de datos a un nodo conectado.
 
 ### Instalación ###
-`pip install requirements-txt`
+`pip install -r requirements.txt`
 
-### Ejecucion ###
+### Ejecución ###
 `python main.py <COM> <BAUDRATE>` 
-dónde COM es el puerto dónde está conectado el módulo ZigBEE y BAUDRATE su velocidad.
+
+dónde COM es el puerto dónde está conectado el módulo ZigBee y BAUDRATE su velocidad.
 
 ### Autores ###
-* Cristian Martin Fernandez
+* Cristian Martín Fernández
