@@ -54,22 +54,22 @@
             <table class="table table-striped">
               <thead>
                 <tr>
-                  <th>Dirección</th>
                   <th>Dirección Larga</th>
+				  <th>Dirección</th>
 				  <th>Operaciones</th>
                 </tr>
               </thead>
               <tbody>
                  <tr ng-repeat="node in nodes">
+					<td>{[{node.addr_long}]}</td>
                     <td>{[{node.addr}]}</td>
-                    <td>{[{node.addr_long}]}</td>
                     <td>
                      <button type="button" class="btn btn-info btn-circle" title="Ver mensajes del nodo" ng-click='view(node)'>
-                      <span class="glyphicon glyphicon-th-list" aria-hidden="true"></span>
+                      Mensajes recibidos
                     </button>&nbsp;&nbsp;
 
-                    <button type="button" class="btn btn-info btn-circle" title="Mandar mensaje al nodo" ng-click='showSendDataForm(node)'>
-                      <span class="glyphicon glyphicon-triangle-top" aria-hidden="true"></span>
+                    <button type="button" class="btn btn-primary btn-circle" title="Mandar mensaje al nodo" ng-click='showSendDataForm(node)'>
+                      Enviar
                     </button>&nbsp;&nbsp;
                  </tr>
               </tbody>
