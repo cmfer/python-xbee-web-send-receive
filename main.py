@@ -108,12 +108,6 @@ def receiver(packet):
             pass
     except Exception as e:
         print ("ERROR in ZigBee receiver "+str(e))
-        
-# Comunicacion soportada en el Smart Gateway: Zigbee
-xbee = ZigBee(ser, escaped=True, callback=receiver)
-
-# Esperamos a que se inicie la comunicacion
-time.sleep(2)
 
 #Recibe una peticion HTTP para obtener los nodos conectados
 def nodes(request):
@@ -193,6 +187,13 @@ main = WSGIApplication(
 if __name__ == '__main__':
     global counter
     counter=0
+    
+    # Comunicacion soportada en el Smart Gateway: Zigbee
+    xbee = ZigBee(ser, escaped=True, callback=receiver)
+
+    # Esperamos a que se inicie la comunicacion
+    time.sleep(2)
+
     try:
         # Inicializamos el servidor
         make_server('', 80, main).serve_forever()
