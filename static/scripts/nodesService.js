@@ -1,5 +1,5 @@
 /* Nombre: nodesService.js
-     Autor principal: Pablo Martin Fernandez */
+     Autor principal: Cristian, Pablo Martin Fernandez */
 /**
  * @module Nodes Service
  * @name Nodes Service

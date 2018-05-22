@@ -87,7 +87,7 @@
       <div class="modal-body">
           <div class="form-group">
               <label for="sensor">Datos a enviar:</label>
-            <input type="text" min="0" id="zigbeevalue" ng-model="value"> <br>
+            <input type="text"  id="zigbeevalue" ng-model="value"> <br>
           </div>
       </div>
       <div class="modal-footer">
@@ -113,8 +113,14 @@
                       <ul ng-repeat="d in data track by $index">
                        <li><b>{[{d.time}]}</b> {[{' '+d.data}]}</li>
                       </ul>
+                      <div class="form-group">
+                          <label for="sensor">Datos a enviar:</label>
+                        <input type="text"  id="zigbeevalue" ng-model="value"> <br>
                       </div>
+                      </div>
+                      
                       <div class="modal-footer">
+                          <button type="button" class="btn btn-success btn-circle" ng-disabled="putForm.$invalid" ng-click="sendData()">Enviar</button>
                           <button type="button" class="btn btn-default" ng-click="stopClient()" data-dismiss="modal">Cerrar</button>
                       </div>
                     </div><!-- /.modal-content -->

@@ -17,3 +17,4 @@ dónde COM es el puerto dónde está conectado el módulo ZigBee y BAUDRATE su v
 
 ### Autores ###
 * Cristian Martín Fernández
+* Jaime Chen Gallardo
