@@ -34,6 +34,8 @@ function ($rootScope,$scope,$location, $interval, Nodes, Data){
     * @description view  Muestra la ventana para visualizar los datos de un nodo.
     */
     $scope.view=function(node){
+        $scope.request_correct=null;
+        $scope.request_bad=null;
         $scope.node=node
         jQuery.noConflict();
             (function ($) {

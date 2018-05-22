@@ -14,7 +14,7 @@
 
         <!-- Bootstrap Core JavaScript -->
         <script src="@path_for('static', path='bower_components/bootstrap/dist/js/bootstrap.min.js')" ></script>
-        <!-- href="bower_components/bootstrap/dist/css/bootstrap.min.css" -->
+        
         <link  href="@path_for('static', path='bower_components/bootstrap/dist/css/bootstrap.min.css')"  rel="stylesheet">
         <script src="@path_for('static', path='js/angular.js')"></script>
         <script src="@path_for('static', path='js/angular-resource.js')"></script>
@@ -36,7 +36,7 @@
    <body ng-controller="NodesController">
 
         <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
-      <div class="container-fluid">
+      <div class="container-fluid" style="background-color: #007bff!important; border: #007bff!important;">
         <div class="navbar-header">
           <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
             <span class="sr-only">Toggle navigation</span>
@@ -44,37 +44,38 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="#home">Curso IoT Samsung. Tecnologías de comunicaciones para la IoT</a>
+          <a class="navbar-brand" style="color: white;" href="/">Curso IoT Samsung. Tecnologías de comunicaciones para la IoT</a>
         </div>
 
 </nav>
-        <div class="col-sm-9 col-md-10 main">
+       <div class="main">
         <h3 class="sub-header">Nodos ZigBee conectados</h3>
           <div class="table-responsive">
             <table class="table table-striped">
               <thead>
                 <tr>
                   <th>Dirección Larga</th>
-				  <th>Dirección</th>
+                  <th>Dirección</th>
 				  <th>Operaciones</th>
                 </tr>
               </thead>
               <tbody>
                  <tr ng-repeat="node in nodes">
-					<td>{[{node.addr_long}]}</td>
+                    <td>{[{node.addr_long}]}</td>
                     <td>{[{node.addr}]}</td>
+              
                     <td>
                      <button type="button" class="btn btn-info btn-circle" title="Ver mensajes del nodo" ng-click='view(node)'>
                       Mensajes recibidos
                     </button>&nbsp;&nbsp;
 
-                    <button type="button" class="btn btn-primary btn-circle" title="Mandar mensaje al nodo" ng-click='showSendDataForm(node)'>
+                     <button type="button" class="btn btn-primary btn-circle" title="Mandar mensaje al nodo" ng-click='showSendDataForm(node)'>
                       Enviar
                     </button>&nbsp;&nbsp;
                  </tr>
               </tbody>
             </table>
-          </div>
+        </div>
           
            <div class="modal fade" id="showDialogSend">
   <div class="modal-dialog">
@@ -121,8 +122,11 @@
                       
                       <div class="modal-footer">
                           <button type="button" class="btn btn-success btn-circle" ng-disabled="putForm.$invalid" ng-click="sendData()">Enviar</button>
-                          <button type="button" class="btn btn-default" ng-click="stopClient()" data-dismiss="modal">Cerrar</button>
+                          <button type="button" class="btn btn-default" ng-click="stopClient()" data-dismiss="modal">Cerrar</button>            
                       </div>
+                        <br>
+        <div class="alert alert-success" role="alert" ng-show="request_correct" name="">Operación realizada correctamente</div>
+        <div class="alert alert-danger" role="alert" ng-show="request_bad">Error al realizar la operación</div>
                     </div><!-- /.modal-content -->
                   </div><!-- /.modal-dialog -->
                 </div><!-- /.modal -->
