@@ -54,16 +54,13 @@
             <table class="table table-striped">
               <thead>
                 <tr>
-                  <th>Dirección Larga</th>
-                  <th>Dirección</th>
+                  <th>Dirección única</th>
 				  <th>Operaciones</th>
                 </tr>
               </thead>
               <tbody>
                  <tr ng-repeat="node in nodes">
                     <td>{[{node.addr_long}]}</td>
-                    <td>{[{node.addr}]}</td>
-              
                     <td>
                      <button type="button" class="btn btn-info btn-circle" title="Ver mensajes del nodo" ng-click='view(node)'>
                       Mensajes recibidos
