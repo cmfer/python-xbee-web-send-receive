@@ -41,12 +41,15 @@ except ImportError:
     import ConfigParser as configparser  # Python 2
 
 # Comprobamos los argumentos de entrada recibidos
-if len(sys.argv)<3:
-    print ('USB and baudrate should be indicated. Please run: $ python main.py [COM_PORT] [baudrate]:. E.G.: python main.py com8 19200')
+if len(sys.argv) not in [2,3]:
+    print ('USB and baudrate should be indicated. Please run: $ python main.py COM_PORT [baudrate]:. E.G.: python main.py com8 9600')
     sys.exit()
 else:
     port=sys.argv[1] # Obtenemos el puerto por argumento
-    baudrate=sys.argv[2] # Obtenemos el baudrare por argumento
+    if sys.argv == 3:
+        baudrate=sys.argv[2] # Obtenemos el baudrare por argumento
+    else:
+        baudrate = 9600
 
 try:
     ser = serial.Serial(port, int(baudrate))
