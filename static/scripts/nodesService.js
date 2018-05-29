@@ -29,6 +29,10 @@ app.factory('Data', ['$resource', function($resource){
             query : {method:'GET', isArray:true}
             });
         },
+		id: function(id){ return $resource('/id', {}, {
+            get : {method:'GET', isArray:false}
+            });
+        },
         zigbee: function(id, data){ return $resource('/zigbee', {id: id, data: data}, {
             query : {method:'GET', isArray:true}
             });

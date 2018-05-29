@@ -12,7 +12,11 @@ angular.module('coap_webControllers').controller(
  *
  */
 function ($rootScope,$scope,$location, $interval, Nodes, Data){
-    
+
+	Data.id().get(function(response){
+		$scope.id = response;
+	}, function(response){});
+	
     // Obtiene los nodos al inicio
     Nodes.get(function(response){
       $scope.nodes = response.nodes;

@@ -32,6 +32,8 @@ from wheezy.web.handlers import file_handler
 
 from xbee import ZigBee
 global counter
+global id_high
+global id_low
 
 try:
     import configparser  # Python 3
@@ -59,7 +61,7 @@ dictionary = {}
 
 def sendToZigBee(addr_long, addr, bytes):
     xbee.send('tx', dest_addr_long=addr_long, dest_addr=addr, data=bytes, len=len(bytes)) #frame_id=b'\x00'
-        
+
 
 class Home(BaseHandler):
     def get(self):
@@ -69,6 +71,9 @@ class Home(BaseHandler):
 # Metodo principal de la clase CoAP, encargado de recibir  paquetes de los Servidores CoAP
 def receiver(packet):
     global counter
+    global id_high
+    global id_low
+    
     try:
         print(strftime("%Y/%m/%d %H:%M:%S", gmtime()) + " Packet:" + str(packet) + "\n")
 
@@ -77,14 +82,14 @@ def receiver(packet):
             addr_long = packet['source_addr_long']
             addr = packet['source_addr']
             encontrado=False
-            
+
             # Comprobamos si hemos recibido una peticion del nodo anteriormente
             for id in dictionary:
                 if dictionary[id]['addr_long']==addr_long:
                     encontrado=True
                     id_encontrado=id
-                    break                  
-            
+                    break
+
             # En caso de no encontrar una peticion previa, inicializamos
             if not encontrado:
                 aux={}
@@ -96,15 +101,26 @@ def receiver(packet):
             else:
                 aux=dictionary[id_encontrado]
                 data=aux['data']
-                
+
             # Comprobamos que no sobrepasa el tamano maximo de data
             if len(data)==20:
                  del data[0] # Eliminamos el primer elemento
-             
+
             data.append({'time':strftime("%Y/%m/%d %H:%M:%S", gmtime()), 'data': payload.decode("ascii")})
             aux['data']=data
             dictionary[id_encontrado]=aux
         elif packet['id'] == 'tx_status':  # Packet ACK
+            pass
+        elif packet['id'] == 'at_response':
+            if packet['command'] == b'SH':
+                id_high = binascii.hexlify(packet['parameter']).decode("ascii")
+                print('DH', id_high)
+            elif packet['command'] == b'SL':
+                id_low = binascii.hexlify(packet['parameter']).decode("ascii")
+                print('DL', id_low)
+
+        else:
+            #print(packet)
             pass
     except Exception as e:
         print ("ERROR in ZigBee receiver "+str(e))
@@ -124,8 +140,19 @@ def nodes(request):
     response = HTTPResponse()
     response.write(json.dumps(dic))
     return response
+    
+def getid(request):
+    global id_high
+    global id_low
+    
+    dic={}
+    dic['id_high'] = id_high
+    dic['id_low'] = id_low
+    response = HTTPResponse()
+    response.write(json.dumps(dic))
+    return response
 
-# Recibe una peticion HTTP para obtener los mensajes recibidos de un nodo    
+# Recibe una peticion HTTP para obtener los mensajes recibidos de un nodo
 def data(request):
     id= int(request.get_param('id'))
     data=dictionary[id]['data']
@@ -133,7 +160,7 @@ def data(request):
     response.write(json.dumps(data))
     return response
 
-# Recibe una peticion HTTP para enviar un mensaje a ZigBee    
+# Recibe una peticion HTTP para enviar un mensaje a ZigBee
 def datatoZigBee(request):
     response = HTTPResponse()
     try:
@@ -146,11 +173,12 @@ def datatoZigBee(request):
         print ("Error enviando datos "+ str(e))
         response.status_code = 401
     return response
-    
+
 # URL mapping del Proxy CoAP
 all_urls = [
     url('', Home, name="default"),
     url(r'^nodes', nodes, name='nodes'),
+    url(r'^id', getid, name='id'),
     url(r'^data', data, name='data'),
     url(r'^zigbee', datatoZigBee, name='zigbee'),
     url('static/{path:any}',
@@ -187,17 +215,20 @@ main = WSGIApplication(
 if __name__ == '__main__':
     global counter
     counter=0
-    
+
     # Comunicacion soportada en el Smart Gateway: Zigbee
     xbee = ZigBee(ser, escaped=True, callback=receiver)
 
+    xbee.send('at', frame_id=b'A', command=b'SH')
+    xbee.send('at', frame_id=b'A', command=b'SL')
+    
     # Esperamos a que se inicie la comunicacion
     time.sleep(2)
 
     try:
         # Inicializamos el servidor
+        print('Server at http://localhost/')
         make_server('', 80, main).serve_forever()
-        print('Server started. Visit http://localhost/')
     except KeyboardInterrupt:
         xbee.halt()
         ser.close()
