@@ -113,6 +113,8 @@
                           <label for="sensor">Enviar datos:</label>
 						  <input type="text"  id="zigbeevalue" ng-model="value">
 						  <button type="button" class="btn btn-success btn-circle" ng-disabled="putForm.$invalid" ng-click="sendData()">Enviar</button>
+						  <div class="alert alert-success" role="alert" ng-show="request_correct" name="">Operación realizada correctamente</div>
+						  <div class="alert alert-danger" role="alert" ng-show="request_bad">Error al realizar la operación</div>
                       </div>
 					  <label for="sensor">Mensajes recibidos:</label>
 					  <ul ng-repeat="d in data track by $index">
@@ -122,10 +124,8 @@
                       </div>
                       
                       <div class="modal-footer">
-                          <button type="button" class="btn btn-default" ng-click="stopClient()" data-dismiss="modal">Cerrar</button                    </div>
-                        <br>
-        <div class="alert alert-success" role="alert" ng-show="request_correct" name="">Operación realizada correctamente</div>
-        <div class="alert alert-danger" role="alert" ng-show="request_bad">Error al realizar la operación</div>
+                          <button type="button" class="btn btn-default" ng-click="stopClient()" data-dismiss="modal">Cerrar</button>
+					  </div>
                     </div><!-- /.modal-content -->
                   </div><!-- /.modal-dialog -->
                 </div><!-- /.modal -->
