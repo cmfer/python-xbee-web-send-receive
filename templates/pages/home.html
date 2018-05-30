@@ -95,10 +95,26 @@
                   <div class="alert alert-danger" role="alert" ng-show="request_bad">Error al realizar la operación</div>
               </div>
               <label for="sensor">Mensajes recibidos:</label>
-              <ul ng-repeat="d in data track by $index">
-               <li><b>{[{d.time}]}</b> {[{' '+d.data}]}</li>
-              </ul>
+			  <div class="table-responsive">
+					<table class="table table-striped">
+					  <thead>
+						<tr>
+						  <th>Timestamp</th>
+						  <th>Mensaje</th>
+						  <th>Tamaño (bytes)</th>
+						</tr>
+					  </thead>
+					  <tbody>
+						 <tr ng-repeat="d in data track by $index">
+							<td>{[{d.time}]}</td>
+							<td>{[{d.data}]}</td>
+							<td>{[{d.data.length}]}</td>
+						 </tr>
+					  </tbody>
+					</table>
+				</div>
               
+			  
               </div>
               
               <div class="modal-footer">
@@ -108,8 +124,4 @@
           </div><!-- /.modal-dialog -->
         </div><!-- /.modal -->
     </div>
-  <footer>
-</footer>
-
-
 </body></html>
