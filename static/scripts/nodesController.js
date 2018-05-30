@@ -33,8 +33,8 @@ function ($rootScope,$scope,$location, $interval, Nodes, Data){
               console.info('Error getting coap nodes list');
             });
     }, 5000);
-    
-   /**
+    	
+	/**
     * @description view  Muestra la ventana para visualizar los datos de un nodo.
     */
     $scope.view=function(node){
@@ -63,11 +63,15 @@ function ($rootScope,$scope,$location, $interval, Nodes, Data){
    /**
     * @description stopClient Para la monitorizacion de datos de un nodo.
     */
-  $scope.stopClient=function(){
-    if ($scope.client!=null){
-        $interval.cancel($scope.client);
-    }
-  }
+	var stopClient = function(){
+		if ($scope.client!=null){
+			$interval.cancel($scope.client);
+		}
+	}
+  
+	$('#showDialogView').on('hidden.bs.modal', function () {
+		stopClient();
+	})
   
   /**
     * @description showSendDataForm Muestra la ventana para enviar datos a un nodo.
