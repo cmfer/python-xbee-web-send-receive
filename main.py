@@ -124,7 +124,7 @@ def receiver(packet):
                 print('DL', sink_info['id_low'])
             elif packet['command'] == b'ID':
                 pan_id_number = struct.unpack(">q", packet['parameter'])[0]
-                sink_info['pan_id'] = hex(pan_id_number)
+                sink_info['pan_id'] = format(pan_id_number, 'x')
                 print('ID', sink_info['pan_id'])
             elif packet['command'] == b'OI':
                 sink_info['operating_pan_id'] = binascii.hexlify(packet['parameter']).decode("ascii")
