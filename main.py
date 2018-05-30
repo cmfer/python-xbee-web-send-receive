@@ -13,6 +13,7 @@ import time
 from wsgiref.simple_server import make_server
 from time import gmtime, strftime
 import binascii
+import struct
 
 import serial
 from wheezy.http import HTTPResponse
@@ -32,30 +33,30 @@ from wheezy.web.handlers import file_handler
 
 from xbee import ZigBee
 global counter
-global id_high
-global id_low
+sink_info = {}
+
 
 try:
-    import configparser  # Python 3
+	import configparser	 # Python 3
 except ImportError:
-    import ConfigParser as configparser  # Python 2
+	import ConfigParser as configparser	 # Python 2
 
 # Comprobamos los argumentos de entrada recibidos
 if len(sys.argv) not in [2,3]:
-    print ('USB and baudrate should be indicated. Please run: $ python main.py COM_PORT [baudrate]:. E.G.: python main.py com8 9600')
-    sys.exit()
+	print ('USB and baudrate should be indicated. Please run: $ python main.py COM_PORT [baudrate]:. E.G.: python main.py com8 9600')
+	sys.exit()
 else:
-    port=sys.argv[1] # Obtenemos el puerto por argumento
-    if sys.argv == 3:
-        baudrate=sys.argv[2] # Obtenemos el baudrare por argumento
-    else:
-        baudrate = 9600
+	port=sys.argv[1] # Obtenemos el puerto por argumento
+	if sys.argv == 3:
+		baudrate=sys.argv[2] # Obtenemos el baudrare por argumento
+	else:
+		baudrate = 9600
 
 try:
-    ser = serial.Serial(port, int(baudrate))
+	ser = serial.Serial(port, int(baudrate))
 except ImportError:
-    print ('Configuration not valid. Revise port and baudrate.')
-    sys.exit()
+	print ('Configuration not valid. Revise port and baudrate.')
+	sys.exit()
 
 
 # Diccionario que guarda la informacion de los servidores CoAP y sus recursos
@@ -63,176 +64,180 @@ dictionary = {}
 
 
 def sendToZigBee(addr_long, addr, bytes):
-    xbee.send('tx', dest_addr_long=addr_long, dest_addr=addr, data=bytes, len=len(bytes)) #frame_id=b'\x00'
+	xbee.send('tx', dest_addr_long=addr_long, dest_addr=addr, data=bytes, len=len(bytes)) #frame_id=b'\x00'
 
 
 class Home(BaseHandler):
-    def get(self):
-        return self.render_response(
-            'pages/home.html')
+	def get(self):
+		return self.render_response(
+			'pages/home.html')
 
 # Metodo principal de la clase CoAP, encargado de recibir  paquetes de los Servidores CoAP
 def receiver(packet):
-    global counter
-    global id_high
-    global id_low
-    
-    try:
-        print(strftime("%Y/%m/%d %H:%M:%S", gmtime()) + " Packet:" + str(packet) + "\n")
+	global counter
+	global sink_info
+	
+	try:
+		print(strftime("%Y/%m/%d %H:%M:%S", gmtime()) + " Packet:" + str(packet) + "\n")
 
-        if packet['id'] == 'rx':  # Packet from Server CoAP
-            payload = packet['rf_data']
-            addr_long = packet['source_addr_long']
-            addr = packet['source_addr']
-            encontrado=False
+		if packet['id'] == 'rx':  # Packet from Server CoAP
+			payload = packet['rf_data']
+			addr_long = packet['source_addr_long']
+			addr = packet['source_addr']
+			encontrado=False
 
-            # Comprobamos si hemos recibido una peticion del nodo anteriormente
-            for id in dictionary:
-                if dictionary[id]['addr_long']==addr_long:
-                    encontrado=True
-                    id_encontrado=id
-                    break
+			# Comprobamos si hemos recibido una peticion del nodo anteriormente
+			for id in dictionary:
+				if dictionary[id]['addr_long']==addr_long:
+					encontrado=True
+					id_encontrado=id
+					break
 
-            # En caso de no encontrar una peticion previa, inicializamos
-            if not encontrado:
-                aux={}
-                data=[]
-                aux['addr']=addr
-                aux['addr_long']=addr_long
-                id_encontrado=counter
-                counter=counter+1
-            else:
-                aux=dictionary[id_encontrado]
-                data=aux['data']
+			# En caso de no encontrar una peticion previa, inicializamos
+			if not encontrado:
+				aux={}
+				data=[]
+				aux['addr']=addr
+				aux['addr_long']=addr_long
+				id_encontrado=counter
+				counter=counter+1
+			else:
+				aux=dictionary[id_encontrado]
+				data=aux['data']
 
-            # Comprobamos que no sobrepasa el tamano maximo de data
-            if len(data)==20:
-                 del data[0] # Eliminamos el primer elemento
+			# Comprobamos que no sobrepasa el tamano maximo de data
+			if len(data)==20:
+				 del data[0] # Eliminamos el primer elemento
 
-            data.append({'time':strftime("%Y/%m/%d %H:%M:%S", gmtime()), 'data': payload.decode("ascii")})
-            aux['data']=data
-            dictionary[id_encontrado]=aux
-        elif packet['id'] == 'tx_status':  # Packet ACK
-            pass
-        elif packet['id'] == 'at_response':
-            if packet['command'] == b'SH':
-                id_high = binascii.hexlify(packet['parameter']).decode("ascii")
-                print('DH', id_high)
-            elif packet['command'] == b'SL':
-                id_low = binascii.hexlify(packet['parameter']).decode("ascii")
-                print('DL', id_low)
+			data.append({'time':strftime("%Y/%m/%d %H:%M:%S", gmtime()), 'data': payload.decode("ascii")})
+			aux['data']=data
+			dictionary[id_encontrado]=aux
+		elif packet['id'] == 'tx_status':  # Packet ACK
+			pass
+		elif packet['id'] == 'at_response':
+			if packet['command'] == b'SH':
+				sink_info['id_high'] = binascii.hexlify(packet['parameter']).decode("ascii")
+				print('DH', sink_info['id_high'])
+			elif packet['command'] == b'SL':
+				sink_info['id_low'] = binascii.hexlify(packet['parameter']).decode("ascii")
+				print('DL', sink_info['id_low'])
+			elif packet['command'] == b'ID':
+				pan_id_number = struct.unpack(">q", packet['parameter'])[0]
+				sink_info['pan_id'] = hex(pan_id_number)
+				print('ID', sink_info['pan_id'])
+			elif packet['command'] == b'OI':
+				sink_info['operating_pan_id'] = binascii.hexlify(packet['parameter']).decode("ascii")
+				print('OI', sink_info['operating_pan_id'])
 
-        else:
-            #print(packet)
-            pass
-    except Exception as e:
-        print ("ERROR in ZigBee receiver "+str(e))
+		else:
+			#print(packet)
+			pass
+	except Exception as e:
+		print ("ERROR in ZigBee receiver "+str(e))
 
 #Recibe una peticion HTTP para obtener los nodos conectados
 def nodes(request):
-    list=[]
-    dic={}
-    for id in dictionary:
-        addr=str(binascii.hexlify(dictionary[id]['addr']))[2:-1]
-        addr=addr[0:8] +' '+addr[8:]
-        addr_long=str(binascii.hexlify(dictionary[id]['addr_long']))[2:-1]
-        addr_long=addr_long[0:8] +' '+addr_long[8:]
-        aux={'id': id, 'addr':addr , 'addr_long':addr_long}
-        list.append(aux)
-    dic['nodes']=list
-    response = HTTPResponse()
-    response.write(json.dumps(dic))
-    return response
-    
+	list=[]
+	dic={}
+	for id in dictionary:
+		addr=str(binascii.hexlify(dictionary[id]['addr']))[2:-1]
+		addr=addr[0:8] +' '+addr[8:]
+		addr_long=str(binascii.hexlify(dictionary[id]['addr_long']))[2:-1]
+		addr_long=addr_long[0:8] +' '+addr_long[8:]
+		aux={'id': id, 'addr':addr , 'addr_long':addr_long}
+		list.append(aux)
+	dic['nodes']=list
+	response = HTTPResponse()
+	response.write(json.dumps(dic))
+	return response
+	
 def getid(request):
-    global id_high
-    global id_low
-    
-    dic={}
-    dic['id_high'] = id_high
-    dic['id_low'] = id_low
-    response = HTTPResponse()
-    response.write(json.dumps(dic))
-    return response
+	global sink_info
+	   
+	response = HTTPResponse()
+	response.write(json.dumps(sink_info))
+	return response
 
 # Recibe una peticion HTTP para obtener los mensajes recibidos de un nodo
 def data(request):
-    id= int(request.get_param('id'))
-    data=dictionary[id]['data']
-    response = HTTPResponse()
-    response.write(json.dumps(data))
-    return response
+	id= int(request.get_param('id'))
+	data=dictionary[id]['data']
+	response = HTTPResponse()
+	response.write(json.dumps(data))
+	return response
 
 # Recibe una peticion HTTP para enviar un mensaje a ZigBee
 def datatoZigBee(request):
-    response = HTTPResponse()
-    try:
-        id= int(request.get_param('id'))
-        data=request.get_param('data').encode("ascii")
-        addr=dictionary[id]['addr']
-        addr_long=dictionary[id]['addr_long']
-        sendToZigBee(addr_long, addr, data)
-    except Exception as e:
-        print ("Error enviando datos "+ str(e))
-        response.status_code = 401
-    return response
+	response = HTTPResponse()
+	try:
+		id= int(request.get_param('id'))
+		data=request.get_param('data').encode("ascii")
+		addr=dictionary[id]['addr']
+		addr_long=dictionary[id]['addr_long']
+		sendToZigBee(addr_long, addr, data)
+	except Exception as e:
+		print ("Error enviando datos "+ str(e))
+		response.status_code = 401
+	return response
 
 # URL mapping del Proxy CoAP
 all_urls = [
-    url('', Home, name="default"),
-    url(r'^nodes', nodes, name='nodes'),
-    url(r'^id', getid, name='id'),
-    url(r'^data', data, name='data'),
-    url(r'^zigbee', datatoZigBee, name='zigbee'),
-    url('static/{path:any}',
-        file_handler(root='static/'),
-        name='static')
+	url('', Home, name="default"),
+	url(r'^nodes', nodes, name='nodes'),
+	url(r'^id', getid, name='id'),
+	url(r'^data', data, name='data'),
+	url(r'^zigbee', datatoZigBee, name='zigbee'),
+	url('static/{path:any}',
+		file_handler(root='static/'),
+		name='static')
 
 ]
 # Configuracion del servidor HTTP
 
 options = {}
-    # Template Engine
+	# Template Engine
 searchpath = ['templates']
 engine = Engine(
-    loader=FileLoader(searchpath),
-    extensions=[
-    CoreExtension(),
-    WidgetExtension(),
+	loader=FileLoader(searchpath),
+	extensions=[
+	CoreExtension(),
+	WidgetExtension(),
 ])
 engine.global_vars.update({
-    'h': html_escape
+	'h': html_escape
 })
 options.update({
-    'render_template': WheezyTemplate(engine)
+	'render_template': WheezyTemplate(engine)
 })
 
 main = WSGIApplication(
-    middleware=[
-        bootstrap_defaults(url_mapping=all_urls),
-        path_routing_middleware_factory
-    ],
-    options=options
+	middleware=[
+		bootstrap_defaults(url_mapping=all_urls),
+		path_routing_middleware_factory
+	],
+	options=options
 )
 # Funcion principal
 if __name__ == '__main__':
-    global counter
-    counter=0
+	global counter
+	counter=0
 
-    # Comunicacion soportada en el Smart Gateway: Zigbee
-    xbee = ZigBee(ser, escaped=True, callback=receiver)
+	# Comunicacion soportada en el Smart Gateway: Zigbee
+	xbee = ZigBee(ser, escaped=True, callback=receiver)
 
-    xbee.send('at', frame_id=b'A', command=b'SH')
-    xbee.send('at', frame_id=b'A', command=b'SL')
-    
-    # Esperamos a que se inicie la comunicacion
-    time.sleep(2)
+	xbee.send('at', frame_id=b'A', command=b'SH')
+	xbee.send('at', frame_id=b'B', command=b'SL')
+	xbee.send('at', frame_id=b'C', command=b'ID')
+	xbee.send('at', frame_id=b'D', command=b'OI')
+	
+	# Esperamos a que se inicie la comunicacion
+	time.sleep(2)
 
-    try:
-        # Inicializamos el servidor
-        print('Server at http://localhost/')
-        make_server('', 80, main).serve_forever()
-    except KeyboardInterrupt:
-        xbee.halt()
-        ser.close()
-    print('\nBye!')
+	try:
+		# Inicializamos el servidor
+		print('Server at http://localhost/')
+		make_server('', 80, main).serve_forever()
+	except KeyboardInterrupt:
+		xbee.halt()
+		ser.close()
+	print('\nBye!')

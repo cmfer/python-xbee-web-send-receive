@@ -49,20 +49,25 @@
 
 </nav>
        <div class="main">
-        <h3 class="sub-header">Nodos ZigBee conectados a {[{id.id_high}]} {[{id.id_low}]}</h3>
+        <h3 class="sub-header">Nodos ZigBee conectados a 
+        <span class="label label-default">ID {[{id.id_high}]} {[{id.id_low}]}</span>
+        <span class="label label-success">PAN ID {[{id.pan_id}]}</span>
+        <span class="label label-info">OPERATING PAN ID {[{id.operating_pan_id}]}</span></h3>
+        
+        
           <div class="table-responsive">
             <table class="table table-striped">
               <thead>
                 <tr>
                   <th>Dirección única</th>
-				  <th>Operaciones</th>
+                  <th>Operaciones</th>
                 </tr>
               </thead>
               <tbody>
                  <tr ng-repeat="node in nodes">
                     <td>{[{node.addr_long}]}</td>
                     <td>
-                     <button type="button" class="btn btn-info btn-circle" title="Ver mensajes del nodo" ng-click='view(node)'>
+                     <button type="button" class="btn btn-primary btn-circle" title="Ver mensajes del nodo" ng-click='view(node)'>
                       Recibir/enviar
                     </button>&nbsp;&nbsp;
 
@@ -71,35 +76,35 @@
             </table>
         </div>
           
-	  <div class="modal fade" id="showDialogView" >
-		  <div class="modal-dialog">
-			<div class="modal-content">
-			  <div class="modal-header">
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-				<h4 class="modal-title">Datos del nodo {[{node.addr_long}]}</h4>
-			  </div>
-			  <div class="modal-body">
-			  
-			  <div class="form-group">
-				  <label for="sensor">Enviar datos:</label>
-				  <input type="text"  id="zigbeevalue" ng-model="value">
-				  <button type="button" class="btn btn-success btn-circle" ng-disabled="putForm.$invalid" ng-click="sendData()">Enviar</button>
-				  <div class="alert alert-success" role="alert" ng-show="request_correct" name="">Operación realizada correctamente</div>
-				  <div class="alert alert-danger" role="alert" ng-show="request_bad">Error al realizar la operación</div>
-			  </div>
-			  <label for="sensor">Mensajes recibidos:</label>
-			  <ul ng-repeat="d in data track by $index">
-			   <li><b>{[{d.time}]}</b> {[{' '+d.data}]}</li>
-			  </ul>
-			  
-			  </div>
-			  
-			  <div class="modal-footer">
-				  <button type="button" class="btn btn-default" ng-click="stopClient()" data-dismiss="modal">Cerrar</button>
-			  </div>
-			</div><!-- /.modal-content -->
-		  </div><!-- /.modal-dialog -->
-		</div><!-- /.modal -->
+      <div class="modal fade" id="showDialogView" >
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Datos del nodo {[{node.addr_long}]}</h4>
+              </div>
+              <div class="modal-body">
+              
+              <div class="form-group">
+                  <label for="sensor">Enviar datos:</label>
+                  <input type="text"  id="zigbeevalue" ng-model="value">
+                  <button type="button" class="btn btn-success btn-circle" ng-disabled="putForm.$invalid" ng-click="sendData()">Enviar</button>
+                  <div class="alert alert-success" role="alert" ng-show="request_correct" name="">Operación realizada correctamente</div>
+                  <div class="alert alert-danger" role="alert" ng-show="request_bad">Error al realizar la operación</div>
+              </div>
+              <label for="sensor">Mensajes recibidos:</label>
+              <ul ng-repeat="d in data track by $index">
+               <li><b>{[{d.time}]}</b> {[{' '+d.data}]}</li>
+              </ul>
+              
+              </div>
+              
+              <div class="modal-footer">
+                  <button type="button" class="btn btn-default" ng-click="stopClient()" data-dismiss="modal">Cerrar</button>
+              </div>
+            </div><!-- /.modal-content -->
+          </div><!-- /.modal-dialog -->
+        </div><!-- /.modal -->
     </div>
   <footer>
 </footer>
