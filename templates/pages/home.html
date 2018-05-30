@@ -60,12 +60,14 @@
               <thead>
                 <tr>
                   <th>Dirección única</th>
+				  <th>Numero de mensajes <br/>(como máximo los {[{id.max_msg}]} últimos)</th>
                   <th>Operaciones</th>
                 </tr>
               </thead>
               <tbody>
                  <tr ng-repeat="node in nodes">
                     <td>{[{node.addr_long}]}</td>
+					<td>{[{node.num_msg}]}</td>
                     <td>
                      <button type="button" class="btn btn-primary btn-circle" title="Ver mensajes del nodo" ng-click='view(node)'>
                       Recibir/enviar
