@@ -72,20 +72,6 @@ function ($rootScope,$scope,$location, $interval, Nodes, Data){
 	$('#showDialogView').on('hidden.bs.modal', function () {
 		stopClient();
 	})
-  
-  /**
-    * @description showSendDataForm Muestra la ventana para enviar datos a un nodo.
-    */
-    $scope.showSendDataForm=function(node){
-        $scope.node=node;
-        $scope.value="";
-        $scope.request_correct=null;
-        $scope.request_bad=null;
-        jQuery.noConflict();
-            (function ($) {
-               $('#showDialogSend').modal('show');
-            })(jQuery);
-    }
     
     /**
     * @description sendData Envia datos a un nodo.
