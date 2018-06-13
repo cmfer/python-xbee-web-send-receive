@@ -60,7 +60,7 @@ except ImportError:
     sys.exit()
 
 
-# Diccionario que guarda la informacion de los servidores CoAP y sus recursos
+# Diccionario que guarda la informacion de los nodos
 dictionary = {}
 sink_info = {'max_msg' : MAX_MESSAGES}
 
@@ -73,7 +73,7 @@ class Home(BaseHandler):
         return self.render_response(
             'pages/home.html')
 
-# Metodo principal de la clase CoAP, encargado de recibir  paquetes de los Servidores CoAP
+# Metodo principal encargado de recibir  paquetes ZigBee
 def receiver(packet):
     global counter
     global sink_info
@@ -81,7 +81,7 @@ def receiver(packet):
     try:
         print(strftime("%Y/%m/%d %H:%M:%S", gmtime()) + " Packet:" + str(packet) + "\n")
 
-        if packet['id'] == 'rx':  # Packet from Server CoAP
+        if packet['id'] == 'rx':  # Paquete Zigbee
             payload = packet['rf_data']
             addr_long = packet['source_addr_long']
             addr = packet['source_addr']
@@ -100,6 +100,7 @@ def receiver(packet):
                 data=[]
                 aux['addr']=addr
                 aux['addr_long']=addr_long
+                aux['bombilla_on']=False
                 id_encontrado=counter
                 counter=counter+1
             else:
@@ -108,9 +109,15 @@ def receiver(packet):
 
             # Comprobamos que no sobrepasa el tamano maximo de data
             if len(data) == MAX_MESSAGES:
-                 del data[0] # Eliminamos el primer elemento
-
-            data.append({'time':strftime("%Y/%m/%d %H:%M:%S", gmtime()), 'data': payload.decode("ascii")})
+                 del data[MAX_MESSAGES-1] # Eliminamos el primer elemento
+            
+            # Comprobamos si recibimos un mensaje de la bombilla
+            if payload.decode("ascii")=="bon":
+                aux['bombilla_on']=True
+            elif payload.decode("ascii")=="boff":
+                aux['bombilla_on']=False
+                
+            data.insert(0, {'time':strftime("%Y/%m/%d %H:%M:%S", gmtime()), 'data': payload.decode("ascii")})
             aux['data']=data
             dictionary[id_encontrado]=aux
         elif packet['id'] == 'tx_status':  # Packet ACK
@@ -131,7 +138,6 @@ def receiver(packet):
                 print('OI', sink_info['operating_pan_id'])
 
         else:
-            #print(packet)
             pass
     except Exception as e:
         print ("ERROR in ZigBee receiver "+str(e))
@@ -150,7 +156,7 @@ def nodes(request):
             num_msg = len( node_info['data'])
         else:
             num_msg = 0
-        aux={'id': id, 'addr':addr , 'addr_long':addr_long, 'num_msg': num_msg}
+        aux={'id': id, 'addr':addr , 'addr_long':addr_long, 'num_msg': num_msg, 'bombilla_on':node_info['bombilla_on']}
         list.append(aux)
     dic['nodes']=list
     response = HTTPResponse()
@@ -167,7 +173,9 @@ def get_id(request):
 # Recibe una peticion HTTP para obtener los mensajes recibidos de un nodo
 def data(request):
     id= int(request.get_param('id'))
-    data=dictionary[id]['data']
+    data=[]
+    if id in dictionary:
+        data=dictionary[id]['data']
     response = HTTPResponse()
     response.write(json.dumps(data))
     return response
@@ -186,7 +194,7 @@ def datatoZigBee(request):
         response.status_code = 401
     return response
 
-# URL mapping del Proxy CoAP
+# URL mapping del Servidor
 all_urls = [
     url('', Home, name="default"),
     url(r'^nodes', nodes, name='nodes'),

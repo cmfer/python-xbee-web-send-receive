@@ -62,6 +62,7 @@
                   <th>Dirección única</th>
 				  <th>Numero de mensajes <br/>(como máximo los {[{id.max_msg}]} últimos)</th>
                   <th>Operaciones</th>
+                  <th>Estado bombilla remota</th>
                 </tr>
               </thead>
               <tbody>
@@ -72,7 +73,12 @@
                      <button type="button" class="btn btn-primary btn-circle" title="Ver mensajes del nodo" ng-click='view(node)'>
                       Recibir/enviar
                     </button>&nbsp;&nbsp;
-
+                    </td>
+                    <td>
+                     <img ng-if="node.bombilla_on" src="@path_for('static', path='icons/bombilla-on.png')" height="50" width="25">
+                     <img ng-if="!node.bombilla_on" src="@path_for('static', path='icons/bombilla-off.png')" height="50" width="25">
+                    <td>
+                    
                  </tr>
               </tbody>
             </table>
