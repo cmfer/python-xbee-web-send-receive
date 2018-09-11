@@ -169,9 +169,10 @@ def get_nodes():
     dic={}
     for id in dictionary:
         node_info = dictionary[id]
-        addr=str(binascii.hexlify(node_info['addr']))[2:-1]
+	#import pdb; pdb.set_trace() 
+        addr=str(binascii.hexlify(node_info['addr'])) #[2:-1]
         addr=addr[0:8] +' '+addr[8:]
-        addr_long=str(binascii.hexlify(node_info['addr_long']))[2:-1]
+        addr_long=str(binascii.hexlify(node_info['addr_long'])) #[2:-1]
         addr_long=addr_long[0:8] +' '+addr_long[8:]
         if 'data' in node_info:
             num_msg = len( node_info['data'])
