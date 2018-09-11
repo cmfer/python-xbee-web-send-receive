@@ -5,7 +5,7 @@
 
 var app= angular.module('coap_web',
     ['coap_webControllers',
-     'coap_webServices','ngRoute','ngResource']);
+     'coap_webServices','ngRoute','ngResource','ngWebSocket']);
 
 // Módulo de los controladores
 angular.module('coap_webControllers',['ngRoute','ngResource','coap_web','coap_webServices']);

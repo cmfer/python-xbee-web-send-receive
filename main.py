@@ -1,9 +1,9 @@
 """
 main.py
 
-Cristian Martin Fernandez
+Cristian Martin Fernandez, Jaime Chen
 
-Clase principal de la pasarela. Inicializa un servidor HTTP y recibe y envia datos a traves de ZigBee.
+Clase principal de la pasarela. Inicializa un servidor HTTP y Websockets, y recibe y envia datos a traves de ZigBee.
 """
 
 import json
@@ -33,6 +33,8 @@ from wheezy.web.handlers import file_handler
 
 from xbee import ZigBee
 
+from geventwebsocket import WebSocketServer, WebSocketApplication, Resource
+
 MAX_MESSAGES = 20
 
 global counter
@@ -61,13 +63,16 @@ except ImportError:
 
 
 # Diccionario que guarda la informacion de los nodos
+global clients
 dictionary = {}
-sink_info = {'max_msg' : MAX_MESSAGES}
+clients = []
+sink_info = {'max_msg': MAX_MESSAGES}
 
+# Envia informacion a traves de ZigBee
 def sendToZigBee(addr_long, addr, bytes):
     xbee.send('tx', dest_addr_long=addr_long, dest_addr=addr, data=bytes, len=len(bytes)) #frame_id=b'\x00'
 
-
+# Manejador de la pagina principal
 class Home(BaseHandler):
     def get(self):
         return self.render_response(
@@ -106,20 +111,31 @@ def receiver(packet):
             else:
                 aux=dictionary[id_encontrado]
                 data=aux['data']
-
+            deleted=False
             # Comprobamos que no sobrepasa el tamano maximo de data
             if len(data) == MAX_MESSAGES:
-                 del data[MAX_MESSAGES-1] # Eliminamos el primer elemento
-            
-            # Comprobamos si recibimos un mensaje de la bombilla
-            if payload.decode("ascii")=="bon":
-                aux['bombilla_on']=True
-            elif payload.decode("ascii")=="boff":
-                aux['bombilla_on']=False
-                
-            data.insert(0, {'time':strftime("%Y/%m/%d %H:%M:%S", gmtime()), 'data': payload.decode("ascii")})
+                del data[MAX_MESSAGES-1] # Eliminamos el primer elemento
+                deleted=True
+            try:
+                # Comprobamos si recibimos un mensaje de la bombilla
+                if payload.decode("ascii")=="bon":
+                    aux['bombilla_on']=True
+                    send_ws_data({'bombilla_on':True, 'id': id_encontrado})
+                elif payload.decode("ascii")=="boff":
+                    aux['bombilla_on']=False
+                    send_ws_data({'bombilla_on':False, 'id': id_encontrado})
+                payload = payload.decode("ascii")
+            except:
+                pass
+            data.insert(0, {'time':strftime("%Y/%m/%d %H:%M:%S", gmtime()), 'data': payload})
             aux['data']=data
             dictionary[id_encontrado]=aux
+            send_ws_data_to_id(id_encontrado,get_data(id_encontrado))
+            if not encontrado:
+                send_ws_data(get_nodes())
+            elif not deleted:
+                send_ws_data({'new_message':id_encontrado})
+
         elif packet['id'] == 'tx_status':  # Packet ACK
             pass
         elif packet['id'] == 'at_response':
@@ -142,8 +158,13 @@ def receiver(packet):
     except Exception as e:
         print ("ERROR in ZigBee receiver "+str(e))
 
-#Recibe una peticion HTTP para obtener los nodos conectados
-def nodes(request):
+# Envia informacion por WS
+def send_ws_data(data):
+    for client in clients:
+        client['ws'].send(json.dumps(data))
+
+# Devuelve los nodos conectados a la red
+def get_nodes():
     list=[]
     dic={}
     for id in dictionary:
@@ -159,10 +180,22 @@ def nodes(request):
         aux={'id': id, 'addr':addr , 'addr_long':addr_long, 'num_msg': num_msg, 'bombilla_on':node_info['bombilla_on']}
         list.append(aux)
     dic['nodes']=list
+    return dic
+
+#Recibe una peticion HTTP para obtener los nodos conectados
+def nodes(request):
+    dic=get_nodes()
     response = HTTPResponse()
     response.write(json.dumps(dic))
     return response
-    
+
+# Envia informacion por WS a los clientes subscritos a un ID
+def send_ws_data_to_id(id, data):
+    for client in clients:
+        if id in client['ids']:
+            client['ws'].send(json.dumps(data))
+
+# Obtiene informacion del nodo ZigBee
 def get_id(request):
     global sink_info
        
@@ -170,12 +203,19 @@ def get_id(request):
     response.write(json.dumps(sink_info))
     return response
 
+
+# Obtiene los datos recibidos de un ID
+def get_data(id):
+    dic={}
+    if id in dictionary:
+        dic['data']=dictionary[id]['data']
+    return dic
+
+
 # Recibe una peticion HTTP para obtener los mensajes recibidos de un nodo
 def data(request):
     id= int(request.get_param('id'))
-    data=[]
-    if id in dictionary:
-        data=dictionary[id]['data']
+    data=get_data(id)
     response = HTTPResponse()
     response.write(json.dumps(data))
     return response
@@ -206,8 +246,8 @@ all_urls = [
         name='static')
 
 ]
-# Configuracion del servidor HTTP
 
+# Configuracion del servidor HTTP
 options = {}
     # Template Engine
 searchpath = ['templates']
@@ -223,6 +263,35 @@ engine.global_vars.update({
 options.update({
     'render_template': WheezyTemplate(engine)
 })
+
+
+# Clase principal para la gestion de Websockets
+class UMAApplication(WebSocketApplication):
+    global dictionary
+    def __init__(self, tuple):
+        super().__init__(tuple)
+        self.aux={}
+
+    def on_open(self):
+        self.aux['ws']=self.ws
+        self.aux['ids']=[]
+        clients.append(self.aux)
+        self.ws.send(json.dumps(get_nodes()))
+
+    def on_message(self, message):
+        data=json.loads(message)
+        if(data['register']):
+            self.aux['ids'].append(data['id'])
+            dic=get_data(data['id'])
+            self.ws.send(json.dumps(dic))
+            print (dictionary)
+        else:
+            self.aux['ids'].remove(data['id'])
+
+    def on_close(self, reason):
+        #clients.remove(self)
+        print (dir(clients))
+        print (reason)
 
 main = WSGIApplication(
     middleware=[
@@ -250,7 +319,17 @@ if __name__ == '__main__':
     try:
         # Inicializamos el servidor
         print('Server at http://localhost/')
-        make_server('', 80, main).serve_forever()
+        #make_server('', 80, main).serve_forever()
+        WebSocketServer(
+        ('0.0.0.0', 80),
+
+        Resource({
+            '^/uma': UMAApplication,
+            '^/.*': main
+        }),debug=False
+
+
+    ).serve_forever()
     except KeyboardInterrupt:
         xbee.halt()
         ser.close()

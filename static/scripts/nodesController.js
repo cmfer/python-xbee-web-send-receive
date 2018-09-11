@@ -4,69 +4,48 @@
 'use strict';
 
 angular.module('coap_webControllers').controller(
- 'NodesController', ['$rootScope','$scope','$location','$interval','Nodes', 'Data',
+ 'NodesController', ['$rootScope','$scope','$location','$interval','Nodes', 'Data','WS',
 
 /**
  * @module Nodes Controller
  * @description Controlador que interactua con el servidor para obtener los datos de los nodos conectado y poder enviarle informacion.
  *
  */
-function ($rootScope,$scope,$location, $interval, Nodes, Data){
-
+function ($rootScope,$scope,$location, $interval, Nodes, Data,WS){
+    
+     $scope.onExit = function() {
+     WS.close();
+    };
+    $scope.nodes=WS.nodes;
+    
 	Data.id().get(function(response){
 		$scope.id = response;
 	}, function(response){});
-	
-    // Obtiene los nodos al inicio
-    Nodes.get(function(response){
-      $scope.nodes = response.nodes;
-    }, 
-    function(response){
-      console.info('Error getting coap nodes list');
-    });
-    $interval(function() {
-            // Obtiene los nodos al inicio
-           Nodes.get(function(response){
-              $scope.nodes = response.nodes;
-            }, 
-            function(response){
-              console.info('Error getting coap nodes list');
-            });
-    }, 5000);
-    	
+
+     $scope.ws = WS;
 	/**
     * @description view  Muestra la ventana para visualizar los datos de un nodo.
     */
     $scope.view=function(node){
         $scope.request_correct=null;
         $scope.request_bad=null;
-        $scope.node=node
+        $scope.node=node;
+        $scope.data=WS.data;
         jQuery.noConflict();
             (function ($) {
                $('#showDialogView').modal('show');
             })(jQuery);
-        Data.get(node.id).query(function(response){
-               $scope.data=response;
-        },function(response){
-
-        });
-        
-        $scope.client=$interval(function() {
-           Data.get(node.id).query(function(response){
-               $scope.data=response;
-        },function(response){
-
-        });
-    }, 5000);
+        var dic={'register': true, id: node.id}
+        WS.send(dic);
+     
   }
   
    /**
     * @description stopClient Para la monitorizacion de datos de un nodo.
     */
 	var stopClient = function(){
-		if ($scope.client!=null){
-			$interval.cancel($scope.client);
-		}
+        var dic={'register': false, id: $scope.node.id}
+        WS.send(dic);
 	}
   
 	$('#showDialogView').on('hidden.bs.modal', function () {

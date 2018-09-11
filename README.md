@@ -1,6 +1,6 @@
 # README #
 
-Servidor Web que permite obtener y enviar mensajes a través del protocolo ZigBee.
+Servidor Web y Websockets que permite obtener y enviar mensajes a través del protocolo ZigBee.
 
 ### Funcionalidades ###
 
