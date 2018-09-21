@@ -270,7 +270,7 @@ options.update({
 class UMAApplication(WebSocketApplication):
     global dictionary
     def __init__(self, tuple):
-        super().__init__(tuple)
+        super(UMAApplication,self).__init__(tuple)
         self.aux={}
 
     def on_open(self):
