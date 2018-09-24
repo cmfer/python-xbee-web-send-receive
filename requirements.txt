@@ -1,4 +1,4 @@
 wheezy.web
 wheezy.template
 pyserial==3.3
-websockets
+gevent-websocket
