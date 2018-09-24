@@ -169,10 +169,14 @@ def get_nodes():
     dic={}
     for id in dictionary:
         node_info = dictionary[id]
-	#import pdb; pdb.set_trace() 
-        addr=str(binascii.hexlify(node_info['addr'])) #[2:-1]
+	#import pdb; pdb.set_trace()
+        addr=str(binascii.hexlify(node_info['addr']))
+        if sys.version_info >= (3,0): # Python 3
+            addr=addr[2:-1]
         addr=addr[0:8] +' '+addr[8:]
-        addr_long=str(binascii.hexlify(node_info['addr_long'])) #[2:-1]
+        addr_long=str(binascii.hexlify(node_info['addr_long']))
+        if sys.version_info >= (3,0): # Python 3
+            addr_long=addr_long[2:-1]
         addr_long=addr_long[0:8] +' '+addr_long[8:]
         if 'data' in node_info:
             num_msg = len( node_info['data'])
@@ -270,7 +274,10 @@ options.update({
 class UMAApplication(WebSocketApplication):
     global dictionary
     def __init__(self, tuple):
-        super(UMAApplication,self).__init__(tuple)
+        try:
+            super().__init__(tuple)  # Python 3 
+        except:
+            super(UMAApplication,self).__init__(tuple)  # Python 2
         self.aux={}
 
     def on_open(self):
@@ -285,13 +292,11 @@ class UMAApplication(WebSocketApplication):
             self.aux['ids'].append(data['id'])
             dic=get_data(data['id'])
             self.ws.send(json.dumps(dic))
-            print (dictionary)
         else:
             self.aux['ids'].remove(data['id'])
 
     def on_close(self, reason):
         #clients.remove(self)
-        print (dir(clients))
         print (reason)
 
 main = WSGIApplication(

@@ -37,8 +37,12 @@ app.factory('Data', ['$resource', function($resource){
 ]);
 
 app.factory('WS', ['$websocket', function($websocket){
+        
+      // Obtenemos la URL de conexion
+      var uri_uma="ws:" + '//' + window.location.host+ '/uma';
+      
       // Open a WebSocket connection
-      var dataStream = $websocket('ws://localhost/uma');
+      var dataStream = $websocket(uri_uma );
 
       var collection = [];
       var nodes= [];
